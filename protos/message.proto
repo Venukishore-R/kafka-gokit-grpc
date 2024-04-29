@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option go_package = "github.com/Venukishore-R/kafka-gokit-grpc/protos";
+
+message ProducerMessageReq {
+  string topic = 1;
+  int64 partition = 2;
+  int64 value1 = 3;
+  string value2 = 4;
+}
+
+message ProducerMessageResp {
+  bool success = 1;
+  string description = 2;
+}
+
+message ConsumeMessageReq {
+  string topic = 1;
+  int64 partition = 2;
+}
+
+message ConsumerMessageResp {
+  string topic = 1;
+  int64 partition = 2;
+  int64 value1 = 3;
+  string value2 = 4;
+}
+
+service MessageService {
+  rpc SendMessage(ProducerMessageReq) returns(ProducerMessageResp);
+  rpc ConsumeMessage(ConsumeMessageReq)returns(ConsumerMessageResp);
+}
+
