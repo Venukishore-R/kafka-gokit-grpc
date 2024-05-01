@@ -6,6 +6,7 @@ require (
 	github.com/IBM/sarama v1.43.2
 	github.com/go-kit/kit v0.13.0
 	github.com/go-kit/log v0.2.1
+	github.com/segmentio/kafka-go v0.4.47
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
 )

@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MessageServiceClient interface {
 	SendMessage(ctx context.Context, in *ProducerMessageReq, opts ...grpc.CallOption) (*ProducerMessageResp, error)
-	ConsumeMessage(ctx context.Context, in *ConsumeMessageReq, opts ...grpc.CallOption) (*ConsumerMessageResp, error)
+	ConsumeMessage(ctx context.Context, in *ConsumeMessageReq, opts ...grpc.CallOption) (*ConsumerMsgFinalResp, error)
 }
 
 type messageServiceClient struct {
@@ -48,8 +48,8 @@ func (c *messageServiceClient) SendMessage(ctx context.Context, in *ProducerMess
 	return out, nil
 }
 
-func (c *messageServiceClient) ConsumeMessage(ctx context.Context, in *ConsumeMessageReq, opts ...grpc.CallOption) (*ConsumerMessageResp, error) {
-	out := new(ConsumerMessageResp)
+func (c *messageServiceClient) ConsumeMessage(ctx context.Context, in *ConsumeMessageReq, opts ...grpc.CallOption) (*ConsumerMsgFinalResp, error) {
+	out := new(ConsumerMsgFinalResp)
 	err := c.cc.Invoke(ctx, MessageService_ConsumeMessage_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (c *messageServiceClient) ConsumeMessage(ctx context.Context, in *ConsumeMe
 // for forward compatibility
 type MessageServiceServer interface {
 	SendMessage(context.Context, *ProducerMessageReq) (*ProducerMessageResp, error)
-	ConsumeMessage(context.Context, *ConsumeMessageReq) (*ConsumerMessageResp, error)
+	ConsumeMessage(context.Context, *ConsumeMessageReq) (*ConsumerMsgFinalResp, error)
 	mustEmbedUnimplementedMessageServiceServer()
 }
 
@@ -73,7 +73,7 @@ type UnimplementedMessageServiceServer struct {
 func (UnimplementedMessageServiceServer) SendMessage(context.Context, *ProducerMessageReq) (*ProducerMessageResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMessage not implemented")
 }
-func (UnimplementedMessageServiceServer) ConsumeMessage(context.Context, *ConsumeMessageReq) (*ConsumerMessageResp, error) {
+func (UnimplementedMessageServiceServer) ConsumeMessage(context.Context, *ConsumeMessageReq) (*ConsumerMsgFinalResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConsumeMessage not implemented")
 }
 func (UnimplementedMessageServiceServer) mustEmbedUnimplementedMessageServiceServer() {}

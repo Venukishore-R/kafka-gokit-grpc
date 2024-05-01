@@ -2,12 +2,16 @@ package workers
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/Venukishore-R/kafka-gokit-grpc/models"
 )
+
+type Result struct {
+	allCaps string
+	length  int
+}
 
 func ConnectToConsumer(brokersUrl []string) (sarama.Consumer, error) {
 	config := sarama.NewConfig()
@@ -21,43 +25,43 @@ func ConnectToConsumer(brokersUrl []string) (sarama.Consumer, error) {
 	return conn, nil
 }
 
-func ConsumeFromQueue(topic string, partition int64) (*models.Message, error) {
+func ConsumeFromQueue(topic string, partition int64) ([]*models.Message, error) {
+	c := make(chan *models.Message)
+
+	var totalMsg []*models.Message
 
 	worker, err := ConnectToConsumer(models.BrokersUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	partitions, err := worker.Partitions(topic)
+	pc, err := worker.ConsumePartition(topic, 0, sarama.OffsetOldest)
 	if err != nil {
 		return nil, err
 	}
 
-	topics, err := worker.Topics()
-	if err != nil {
-		return nil, err
-	}
+	go storeMsgInArray(pc, c)
 
-	log.Println("topics ", topics)
-	
-	msgCount := 0
-	var message models.Message
-
-	for _, partition := range partitions {
-		pc, err := worker.ConsumePartition(topic, partition, sarama.OffsetOldest)
-		if err != nil {
-			return nil, err
+	go func() {
+		for res := range c {
+			totalMsg = append(totalMsg, res)
 		}
-		go func(pc sarama.PartitionConsumer) {
-			for msg := range pc.Messages() {
-				msgCount++
+	}()
 
-				json.Unmarshal(msg.Value, &message)
-				fmt.Printf("Received message on topic %s || Partition %d || message: %s || %d || count %d\n", message.Topic, message.Partition, message.Value2, message.Value1, msgCount)
-			}
-		}(pc)
+	time.Sleep(1 * time.Second)
+	return totalMsg, nil
+}
+
+func storeMsgInArray(pc sarama.PartitionConsumer, c chan *models.Message) {
+
+	defer close(c)
+	pcMesssages := pc.Messages()
+
+	for msg := range pcMesssages {
+		var messsage *models.Message
+
+		json.Unmarshal(msg.Value, &messsage)
+
+		c <- messsage
 	}
-
-	log.Println("msg", message)
-	return &message, nil
 }

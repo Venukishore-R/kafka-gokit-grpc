@@ -2,8 +2,9 @@ package transports
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 
 	"github.com/Venukishore-R/kafka-gokit-grpc/endpoints"
 	"github.com/Venukishore-R/kafka-gokit-grpc/protos"
@@ -58,13 +59,12 @@ func encodeMessageResp(_ context.Context, response interface{}) (interface{}, er
 	}, nil
 }
 
-func (s *MyServer) ConsumeMessage(ctx context.Context, request *protos.ConsumeMessageReq) (*protos.ConsumerMessageResp, error) {
+func (s *MyServer) ConsumeMessage(ctx context.Context, request *protos.ConsumeMessageReq) (*protos.ConsumerMsgFinalResp, error) {
 	_, resp, err := s.consumeMessages.ServeGRPC(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-
-	return resp.(*protos.ConsumerMessageResp), nil
+	return resp.(*protos.ConsumerMsgFinalResp), nil
 }
 
 func decodeConsumeMsgReq(_ context.Context, request interface{}) (interface{}, error) {
@@ -76,11 +76,22 @@ func decodeConsumeMsgReq(_ context.Context, request interface{}) (interface{}, e
 }
 
 func encodeConsumeMsgResp(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(endpoints.ConsumeMsgResp)
-	return &protos.ConsumerMessageResp{
-		Topic:     resp.Topic,
-		Partition: resp.Partition,
-		Value1:    resp.Value1,
-		Value2:    resp.Value2,
+	var finalMsg []*protos.ConsumerMessageResp
+
+	resp := response.(endpoints.ConsumeMsgFinalResp)
+
+	fmt.Println("resp", resp)
+	for _, message := range resp.ConsumeMsgFinalResp {
+		msg := &protos.ConsumerMessageResp{
+			Topic:     message.Topic,
+			Partition: message.Partition,
+			Value1:    message.Value1,
+			Value2:    message.Value2,
+		}
+
+		finalMsg = append(finalMsg, msg)
+	}
+	return &protos.ConsumerMsgFinalResp{
+		ConsumerMsgFinalResp: finalMsg,
 	}, nil
 }

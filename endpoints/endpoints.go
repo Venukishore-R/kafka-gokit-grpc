@@ -32,13 +32,23 @@ func makeSendMessageEndpoint(s services.Service) endpoint.Endpoint {
 
 func makeConsumeMessagesEndpoint(s services.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		var finalMsg []*ConsumeMsgResp
 		req := request.(ConsumeMsgReq)
-		topic, partition, value1, value2, err := s.ConsumeMessage(ctx, req.Topic, req.Partition)
-		return ConsumeMsgResp{
-			Topic:     topic,
-			Partition: partition,
-			Value1:    value1,
-			Value2:    value2,
+
+		messages, err := s.ConsumeMessage(ctx, req.Topic, req.Partition)
+
+		for _, message := range messages {
+			msg := &ConsumeMsgResp{
+				Topic:     message.Topic,
+				Partition: message.Partition,
+				Value1:    message.Value1,
+				Value2:    message.Value2,
+			}
+
+			finalMsg = append(finalMsg, msg)
+		}
+		return ConsumeMsgFinalResp{
+			ConsumeMsgFinalResp: finalMsg,
 		}, err
 	}
 }

@@ -26,8 +26,12 @@ message ConsumerMessageResp {
   string value2 = 4;
 }
 
+message ConsumerMsgFinalResp {
+  repeated ConsumerMessageResp consumerMsgFinalResp = 1;
+}
+
 service MessageService {
   rpc SendMessage(ProducerMessageReq) returns(ProducerMessageResp);
-  rpc ConsumeMessage(ConsumeMessageReq)returns(ConsumerMessageResp);
+  rpc ConsumeMessage(ConsumeMessageReq)returns(ConsumerMsgFinalResp);
 }
 

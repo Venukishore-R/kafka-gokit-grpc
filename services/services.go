@@ -16,7 +16,7 @@ type LoggerService struct {
 
 type Service interface {
 	SendMessage(ctx context.Context, topic string, partition int64, value1 int64, value2 string) (bool, string, error)
-	ConsumeMessage(ctx context.Context, topic string, partition int64) (string, int64, int64, string, error)
+	ConsumeMessage(ctx context.Context, topic string, partition int64) ([]*models.Message, error)
 }
 
 func NewLoggerService(logger log.Logger) *LoggerService {
@@ -25,7 +25,7 @@ func NewLoggerService(logger log.Logger) *LoggerService {
 	}
 }
 func (s LoggerService) SendMessage(ctx context.Context, topic string, partition int64, value1 int64, value2 string) (bool, string, error) {
-	newMessage := models.Message{
+	newMessage := &models.Message{
 		Topic:     topic,
 		Partition: partition,
 		Value1:    value1,
@@ -45,15 +45,13 @@ func (s LoggerService) SendMessage(ctx context.Context, topic string, partition 
 	return true, "message pushed to queue", nil
 }
 
-func (s LoggerService) ConsumeMessage(ctx context.Context, topic string, partition int64) (string, int64, int64, string, error) {
-	var messages *models.Message
-	var err error
+func (s LoggerService) ConsumeMessage(ctx context.Context, topic string, partition int64) ([]*models.Message, error) {
 
-	messages, err = workers.ConsumeFromQueue(topic, partition)
+	messages, err := workers.ConsumeFromQueue(topic, partition)
 	if err != nil {
-		return "", 0, 0, "", err
+		return nil, err
 	}
 
-	return messages.Topic, messages.Partition, messages.Value1, messages.Value2, nil
+	return messages, nil
 
 }

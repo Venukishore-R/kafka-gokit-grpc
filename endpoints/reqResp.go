@@ -23,3 +23,7 @@ type ConsumeMsgResp struct {
 	Value1    int64  `json:"value1"`
 	Value2    string `json:"value2"`
 }
+
+type ConsumeMsgFinalResp struct {
+	ConsumeMsgFinalResp []*ConsumeMsgResp `json:"consumeMsgFinalResp"`
+}
